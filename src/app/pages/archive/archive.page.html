@@ -26,7 +26,7 @@
               <div (click)="functionChats(selectNumber,selectNumberName,chatSessionIdAdd,items.chatSessionId)">
                 <div class="diveNameInfo">
                   <div class="divName">{{items.date}}</div>
-                  <div class="divNumber" *ngIf="items.badge!=0">{{items.chatSessionId}}</div>
+                  <div class="divNumber" *ngIf="items.badge!=0">{{items.status}}</div>
                   <div [ngClass]="{'numNewMsgRight': language=='ar', 'numNewMsgLeft': language!='ar'}">{{items.time}}</div>
                 </div>
               </div>
