@@ -199,6 +199,7 @@ async functionReturnData(numberUser:any): Promise<void> {
           const history = this.returnResultData.data?.searchList?.[0]?.chatHistory || [];
           history.forEach((item:any) => {
             this.returnChatArray.push({
+              status: item.status,
               chatSessionId: item.chatSessionId,
               date: item.date,
               time: item.time
