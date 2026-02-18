@@ -28,6 +28,15 @@ export class HomePage implements OnInit {
   public menue_down_Three:any;
   public menue_down_four:any;
   public returnResultData:any;
+
+
+  public returnResultDataQue:any;
+  public returnChatArrayQue: Set<any> = new Set();
+  public returnArrayChatFromServerQue:any;
+  public returnChatArrayAll: Set<any> = new Set();
+  public returnResultDataQueSizeAll:any = 0;
+  public returnResultDataQueSize:any = 0;
+
   public returnChatArray:any = [];
   public returnChatSearchArray:any = [];
   public returnArrayChatFromServer:any;
@@ -35,7 +44,6 @@ export class HomePage implements OnInit {
   public returnArrayChatDataByNumberFromServer:any;
   public chatVal:any = 2;
   public noExisting:any;
-  public search_no_data:any;
   public searchData:any;
   public msg_count:any;
   public showSearch:boolean = false;
@@ -45,6 +53,7 @@ export class HomePage implements OnInit {
   public timeCheck:any;
   public searchType:any=0;
   public searchChatVal:any = 2;
+  public search_no_data:any;
   //check login
   public genaratedFullDate:any;
   public genaratedDate:any;
@@ -68,19 +77,12 @@ export class HomePage implements OnInit {
   public menuDirection: any;
   public menuDirectionTow: any;
   public showPassword: boolean = false;
-
-  public returnResultDataQue:any;
-  public returnChatArrayQue: Set<any> = new Set();
-  public returnArrayChatFromServerQue:any;
-  public returnChatArrayAll: Set<any> = new Set();
-  public returnResultDataQueSizeAll:any = 0;
-  public returnResultDataQueSize:any = 0;
   constructor(private userService: UserService,private firebaseMessaging : FirebaseMessaging,private databaseService: DatabaseService,private router: Router,private chatService: ChatService,private globalization: Globalization, private translate: TranslateService,private modalController: ModalController,private network:Network,private menu:MenuController,private storage: Storage,private platform: Platform,private navCtrl: NavController,private toastCtrl: ToastController,private loading: LoadingController) {
     this.platform.backButton.subscribeWithPriority(10, () => {
       this.navCtrl.navigateRoot("/home");
     });
     this.menu.enable(false,"sideMenu");
-     this.checkLoginDataUser();
+    this.checkLoginDataUser();
   }
   initialiseTranslation(){
     this.translate.get('menuDirection').subscribe((res: string) => {
@@ -122,7 +124,7 @@ export class HomePage implements OnInit {
     this.translate.get('noExistingChat').subscribe((res: string) => {
       this.noExisting = res;
     });
-    this.translate.get('search_no_data').subscribe((res: string) => {
+     this.translate.get('search_no_data').subscribe((res: string) => {
       this.search_no_data = res;
     });
     this.translate.get('msg_count').subscribe((res: string) => {
@@ -169,17 +171,23 @@ export class HomePage implements OnInit {
     await this.functionReturnDataQue();
     await loading.present();
   }
-    async checkLoginDataUser(){
+  async checkLoginDataUser(){
     this.department = await this.storage.get('department');
     this.mainUserName = await this.storage.get('mainUserName');
     this.userName = await this.storage.get('userName');
       this.firebaseMessaging.requestPermission({forceShow: false}).then(function() {
+       //console.log("Push messaging is allowed");
      });
      let topic = this.mainUserName+this.department;
      await this.firebaseMessaging.subscribe(topic);
      await this.firebaseMessaging.onMessage().subscribe(async (data:any)=>{
      })
-     await this.firebaseMessaging.onBackgroundMessage().subscribe((data:any)=>{
+     await this.firebaseMessaging.onBackgroundMessage().subscribe(async (data:any)=>{
+      if (data.chatSessionId && data.number && data.userName) {
+        const contacts = await this.functionChatGetMobileInfo(data.number);
+         let fullName = contacts+' & '+data.userName;
+         this.navCtrl.navigateRoot(['/chats', {number:data.number,chatSessionId:data.chatSessionId,userNameUsed:data.userName,backUrl:1,name:fullName}]);
+      }
     })
     let token = await this.firebaseMessaging.getToken();
     let sendValues = {'mainUser':this.mainUserName,'userName':this.userName,'dep':this.department,'token':token};
@@ -187,6 +195,31 @@ export class HomePage implements OnInit {
     }).catch(error=>{
       this.checkLoginDataUser();
     });
+  }
+  async functionChatGetMobileInfo(number:any): Promise<any[]> {
+      let key = this.mainUserName + this.userName + this.password + "(OLH)" + this.genaratedDate;
+      const md5Hash = CryptoJS.algo.MD5.create();
+      md5Hash.update(key);
+      this.apiKey = md5Hash.finalize().toString();
+      let sendValues = {
+        mainUserName: this.mainUserName,
+        userName: this.userName,
+        password: this.password,
+        apiKey: this.apiKey
+      };
+     
+    try {
+      const data: any = await this.userService.chatGetMobileInfo(sendValues);
+      if (data.messageId == 1) {
+        const matchedContact = data.info.find((item:any) =>
+          item.number == number
+        );
+        return matchedContact ? matchedContact.name : number;
+      }
+      return number;
+    } catch (error) {
+      return number;
+    }
   }
   functionRemoveSearch(){
     this.searchData = "";
@@ -239,6 +272,8 @@ export class HomePage implements OnInit {
           let countOfData = 0;
           this.returnArrayChatFromServer = this.returnResultData.data.process;
           Object.keys(this.returnArrayChatFromServer).forEach(key => {
+            //let userName = this.returnArrayChatFromServer[key].userName.toLowerCase();
+            //let userNamekey = this.userName.toLowerCase();
             this.returnChatArray[counter]=[];
               this.returnChatArray[counter]['mobile'] = this.returnArrayChatFromServer[key].mobile;
               this.returnChatArray[counter]['userName'] = this.returnArrayChatFromServer[key].userName;
@@ -322,7 +357,6 @@ export class HomePage implements OnInit {
       this.functionReturnDataQue();
     });
   }
-
   functionSearch(event:any){
     this.searchData = event.target.value;
     if(this.searchData == "" || this.searchData == undefined){
