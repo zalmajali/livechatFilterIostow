@@ -4,144 +4,85 @@ import {Storage} from '@ionic/storage-angular';
 import { Network } from '@awesome-cordova-plugins/network/ngx';
 import { Globalization } from '@awesome-cordova-plugins/globalization/ngx';
 import { TranslateService } from '@ngx-translate/core';
-import {UserService} from "../../service/user.service";
+import {ChatService} from "../../service/chat.service";
+import {DatabaseService} from "../../service/database.service";
 import * as CryptoJS from 'crypto-js';
 import { Router } from '@angular/router';
-import {VersionComponent} from "../version/version.component";
-import { AppVersion } from '@awesome-cordova-plugins/app-version/ngx';
-import { ChatService } from "../../service/chat.service";
-import { AnimationController } from '@ionic/angular';
+import { FirebaseMessaging } from '@awesome-cordova-plugins/firebase-messaging/ngx';
+import {UserService} from "../../service/user.service";
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.page.html',
-  styleUrls: ['./login.page.scss'],
+  selector: 'app-home',
+  templateUrl: './home.page.html',
+  styleUrls: ['./home.page.scss'],
   standalone:false
 })
-export class LoginPage implements OnInit {
-public pageTitle: any;
-public sign_up: any;
-public login_button: any;
-public isdisabled:boolean=true;
-public apiKey: any;
-public returnResultData:any;
-public login_error_one:any;
-public login_error_tow:any;
-public login_error_three:any;
-public genaratedDate:any;
-public year:any;
-public month:any;
-public day:any;
-public contact_label:any;
-public contact_link:any;
-//new login
-public mainUserName: any;
-public userNameVal: any;
-// //mainUserName
-// public mainUserName: any;
-// public main_user_name: any;
-// public errorMainUserName:any="";
-// public isErrorMainUserName:any = 1;
-// public main_user_name_error:any;
+export class HomePage implements OnInit {
+  public arrow_back:any;
+  public arrow_go:any;
+  public floatD:any;
+  public menue_up_one:any;
+  public menue_up_tow:any;
+  public menue_up_Three:any;
+  public menue_down_on:any;
+  public menue_down_tow:any;
+  public menue_down_Three:any;
+  public menue_down_four:any;
+  public returnResultData:any;
 
-//UserName
-public userName: any;
-public user_name: any;
-public errorUserName:any="";
-public isErrorUserName:any = 1;
-public isErrorUserNameTow:any = 1;
-public user_name_error:any;
 
-//password
-public password: any;
-public user_password: any;
-public errorUserPassword:any="";
-public isErrorUserPassword:any = 1;
-public user_Password_error:any;
+  public returnResultDataQue:any;
+  public returnChatArrayQue: Set<any> = new Set();
+  public returnArrayChatFromServerQue:any;
+  public returnChatArrayAll: Set<any> = new Set();
+  public returnResultDataQueSizeAll:any = 0;
+  public returnResultDataQueSize:any = 0;
 
-//page setting
-public checkLanguage: any=0;
-public language: any;
-public menuDirection: any;
-public menuDirectionTow: any;
-public showPassword: boolean = false;
-public login_note: any;
-public login_error_userN_format: any;
-public version: any;
-  constructor(private animationCtrl: AnimationController,private chatService: ChatService,private router: Router,private appVersion: AppVersion,private userService: UserService,private globalization: Globalization, private translate: TranslateService,private modalController: ModalController,private network:Network,private menu:MenuController,private storage: Storage,private platform: Platform,private navCtrl: NavController,private toastCtrl: ToastController,private loading: LoadingController) {
+  public returnChatArray:any = [];
+  public returnChatSearchArray:any = [];
+  public returnArrayChatFromServer:any;
+  public returnResultDataByNumber:any;
+  public returnArrayChatDataByNumberFromServer:any;
+  public chatVal:any = 2;
+  public noExisting:any;
+  public searchData:any;
+  public msg_count:any;
+  public showSearch:boolean = false;
+  public showSearchs:boolean = true;
+  public search:any;
+  public showCloseSearch:any=0;
+  public timeCheck:any;
+  public searchType:any=0;
+  public searchChatVal:any = 2;
+  public search_no_data:any;
+  //check login
+  public genaratedFullDate:any;
+  public genaratedDate:any;
+  public year:any;
+  public month:any;
+  public day:any;
+  public hour:any;
+  public minutes:any;
+  public seconds:any;
+  public mainUserName:any;
+  public userName:any;
+  public password:any;
+  public apiKey:any;
+  public sessionLogin:any;
+  public department:any;
+  public supervisor:any;
+  public name:any;
+  //page setting
+  public checkLanguage: any=0;
+  public language: any;
+  public menuDirection: any;
+  public menuDirectionTow: any;
+  public showPassword: boolean = false;
+  constructor(private userService: UserService,private firebaseMessaging : FirebaseMessaging,private databaseService: DatabaseService,private router: Router,private chatService: ChatService,private globalization: Globalization, private translate: TranslateService,private modalController: ModalController,private network:Network,private menu:MenuController,private storage: Storage,private platform: Platform,private navCtrl: NavController,private toastCtrl: ToastController,private loading: LoadingController) {
     this.platform.backButton.subscribeWithPriority(10, () => {
-      this.navCtrl.navigateRoot("/login");
+      this.navCtrl.navigateRoot("/home");
     });
     this.menu.enable(false,"sideMenu");
-     this.platform.ready().then(async () => {
-      this.getAppInfo();
-    });
-  }
-  async getAppInfo() {
-      this.version = await this.appVersion.getVersionNumber();
-      this.chatService.version().then(async data => {
-        this.returnResultData = data;
-        let errorData = this.returnResultData.status;
-        if (errorData == 1) {
-          let returnData = await this.compareVersions(this.version, this.returnResultData.ios);
-          if(returnData){
-            this.getAnimation();
-          }
-        }
-      });
-  }
-  async getAnimation(){
-     // دالة custom enter animation
-        const enterAnimation = (baseEl: HTMLElement) => {
-          const root = baseEl.shadowRoot;
-          const backdropAnimation = this.animationCtrl
-            .create()
-            .addElement(root!.querySelector('ion-backdrop')!)
-            .fromTo('opacity', 0.01, 'var(--backdrop-opacity)');
-          const wrapperAnimation = this.animationCtrl
-            .create()
-            .addElement(root!.querySelector('.modal-wrapper')!)
-            .keyframes([
-              { offset: 0, opacity: '0', transform: 'translateY(100%)' },
-              { offset: 1, opacity: '0.99', transform: 'translateY(0)' }
-            ]);
-
-          return this.animationCtrl
-            .create()
-            .addElement(baseEl)
-            .easing('cubic-bezier(0.36,0.66,0.04,1)')
-            .duration(800) // هنا التحكم في الوقت! غيّر الرقم زي ما تحب (بالمللي ثانية)
-            .addAnimation([backdropAnimation, wrapperAnimation]);
-        };
-
-        // leave animation عكس الـ enter
-        const leaveAnimation = (baseEl: HTMLElement) => {
-          return enterAnimation(baseEl).direction('reverse');
-        };
-
-        const modal = await this.modalController.create({
-          component: VersionComponent,
-          animated: true,
-          cssClass: "my-custom-modal-temp",
-          enterAnimation: enterAnimation,
-          leaveAnimation: leaveAnimation
-        });
-
-        modal.onDidDismiss().then((data: any) => {
-          console.log('Modal dismissed with data:', data.data);
-          // هنا ممكن تعمل حاجة بعد الإغلاق، زي إعادة فحص الإصدار أو أي شيء
-        });
-        await modal.present();
-  }
-  compareVersions(current: string, latest: string): boolean {
-    const curr = current.split('.').map(Number);
-    const last = latest.split('.').map(Number);
-    for (let i = 0; i < Math.max(curr.length, last.length); i++) {
-      const c = curr[i] || 0;
-      const l = last[i] || 0;
-      if (c < l) return true;   // في تحديث
-      if (c > l) return false;  // نسختك أحدث
-    }
-    return false; // نفس النسخة
+    this.checkLoginDataUser();
   }
   initialiseTranslation(){
     this.translate.get('menuDirection').subscribe((res: string) => {
@@ -150,199 +91,368 @@ public version: any;
     this.translate.get('menuDirectionTow').subscribe((res: string) => {
       this.menuDirectionTow = res;
     });
-    this.translate.get('login_title').subscribe((res: string) => {
-      this.pageTitle = res;
+    this.translate.get('floatD').subscribe((res: string) => {
+      this.floatD = res;
     });
-    this.translate.get('sign_up').subscribe((res: string) => {
-      this.sign_up = res;
+    this.translate.get('arrow_back').subscribe((res: string) => {
+      this.arrow_back = res;
     });
-    this.translate.get('login_button').subscribe((res: string) => {
-      this.login_button = res;
+    this.translate.get('arrow_go').subscribe((res: string) => {
+      this.arrow_go = res;
     });
-    // this.translate.get('main_user_name').subscribe((res: string) => {
-    //   this.main_user_name = res;
-    // });
-    // this.translate.get('main_user_name_error').subscribe((res: string) => {
-    //   this.main_user_name_error = res;
-    // });
-    this.translate.get('user_name').subscribe((res: string) => {
-      this.user_name = res;
+    this.translate.get('menue_up_one').subscribe((res: string) => {
+      this.menue_up_one = res;
     });
-    this.translate.get('user_name_error').subscribe((res: string) => {
-      this.user_name_error = res;
+    this.translate.get('menue_up_tow').subscribe((res: string) => {
+      this.menue_up_tow = res;
     });
-    this.translate.get('user_password').subscribe((res: string) => {
-      this.user_password = res;
+    this.translate.get('menue_up_Three').subscribe((res: string) => {
+      this.menue_up_Three = res;
     });
-    this.translate.get('user_Password_error').subscribe((res: string) => {
-      this.user_Password_error = res;
+    this.translate.get('menue_down_on').subscribe((res: string) => {
+      this.menue_down_on = res;
     });
-    this.translate.get('login_error_one').subscribe((res: string) => {
-      this.login_error_one = res;
+    this.translate.get('menue_down_tow').subscribe((res: string) => {
+      this.menue_down_tow = res;
     });
-    this.translate.get('login_error_tow').subscribe((res: string) => {
-      this.login_error_tow = res;
+    this.translate.get('menue_down_Three').subscribe((res: string) => {
+      this.menue_down_Three = res;
     });
-    this.translate.get('login_error_three').subscribe((res: string) => {
-      this.login_error_three = res;
+    this.translate.get('menue_down_four').subscribe((res: string) => {
+      this.menue_down_four = res;
     });
-    this.translate.get('contact_link').subscribe((res: string) => {
-      this.contact_link = res;
+    this.translate.get('noExistingChat').subscribe((res: string) => {
+      this.noExisting = res;
     });
-    this.translate.get('contact_label').subscribe((res: string) => {
-      this.contact_label = res;
+     this.translate.get('search_no_data').subscribe((res: string) => {
+      this.search_no_data = res;
     });
-     this.translate.get('login_note').subscribe((res: string) => {
-      this.login_note = res;
+    this.translate.get('msg_count').subscribe((res: string) => {
+      this.msg_count = res;
     });
-    this.translate.get('login_error_userN_format').subscribe((res: string) => {
-      this.login_error_userN_format = res;
+    this.translate.get('search').subscribe((res: string) => {
+      this.search = res;
     });
-  }
-  // checkMainUserName(event:any){
-  //   this.mainUserName = event.target.value;
-  //   this.errorMainUserName = "ionItemStyleSuccess";
-  //   this.isErrorMainUserName = 1;
-  //   if(this.mainUserName == "" || this.mainUserName == undefined){
-  //     this.errorMainUserName = "ionItemStyleError";
-  //     this.isErrorMainUserName = 0;
-  //   }else{
-  //     this.isdisabled = true;
-  //   }
-  // }
-  checkUserName(event:any){
-    this.errorUserName = "ionItemStyleSuccess";
-    this.isErrorUserName = 1;
-    this.isErrorUserNameTow = 1;
-    this.userName = event.target.value;
-    if(this.userName == "" || this.userName == undefined){
-      this.errorUserName = "ionItemStyleError";
-      this.isErrorUserName = 0;
-    }else{
-      this.isdisabled = true;
-    }
-  }
-  checkPassword(event:any){
-    this.errorUserPassword = "ionItemStyleSuccess";
-    this.isErrorUserPassword = 1;
-    this.password = event.target.value;
-    if(this.password == "" || this.password == undefined){
-      this.errorUserPassword = "ionItemStyleError";
-      this.isErrorUserPassword = 0;
-    }else{
-      this.isdisabled = true;
-    }
   }
   async ngOnInit() {
+    await this.getDeviceLanguage();
+    await this.checkLoginUser();
+    await this.functionCreatTable();
+    const loading = await this.loading.create({
+      cssClass: 'my-custom-class',
+      message: '',
+      duration: 1500,
+    });
+    this.mainUserName = await this.storage.get('mainUserName');
+    this.userName = await this.storage.get('userName');
+    this.password = await this.storage.get('password');
+    this.apiKey = await this.storage.get('apiKey');
+    this.sessionLogin = await this.storage.get('sessionLogin');
     let currentDate = new Date();
     this.year = currentDate.getFullYear();
     this.month = currentDate.getMonth() + 1; // Months are zero-based (0 = January)
     this.day = currentDate.getDate();
+    this.hour = currentDate.getHours();
+    this.minutes  = currentDate.getMinutes();
+    this.seconds = currentDate.getSeconds();
     if(this.month<10)
       this.month = '0'+ this.month;
-    if(this.day<10)
+    if(this.day<10) 
       this.day = '0'+ this.day;
+    if(this.hour<10) 
+      this.hour = '0'+ this.hour;
+    if(this.minutes<10) 
+      this.minutes = '0'+ this.minutes;
+    if(this.seconds<10) 
+      this.seconds = '0'+ this.seconds;
     this.genaratedDate = this.year+""+this.month+""+this.day;
-    await this.getDeviceLanguage();
+    this.genaratedFullDate = this.year+""+this.month+""+this.day+this.hour+this.minutes+this.seconds;
+    await this.functionReturnData();
+    await this.functionReturnDataQue();
+    await loading.present();
   }
-  async checkUser(){
-      let valcheckV = 0;
-      await this.chatService.version().then(async data => {
-        this.returnResultData = data;
-        let errorData = this.returnResultData.status;
-        if (errorData == 1) {
-          let returnData = await this.compareVersions(this.version, this.returnResultData.ios);
-          if(returnData){
-            this.getAnimation();
-            valcheckV = 1;
-          }
-        }
-      });
-    let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
-      //this.navCtrl.navigateRoot("/login");
-      return false;
+  async checkLoginDataUser(){
+    this.department = await this.storage.get('department');
+    this.mainUserName = await this.storage.get('mainUserName');
+    this.userName = await this.storage.get('userName');
+      this.firebaseMessaging.requestPermission({forceShow: false}).then(function() {
+       //console.log("Push messaging is allowed");
+     });
+     let topic = this.mainUserName+this.department;
+     await this.firebaseMessaging.subscribe(topic);
+     await this.firebaseMessaging.onMessage().subscribe(async (data:any)=>{
+     })
+     await this.firebaseMessaging.onBackgroundMessage().subscribe(async (data:any)=>{
+      if (data.chatSessionId && data.number && data.userName) {
+        const contacts = await this.functionChatGetMobileInfo(data.number);
+         let fullName = contacts+' & '+data.userName;
+         this.navCtrl.navigateRoot(['/chats', {number:data.number,chatSessionId:data.chatSessionId,userNameUsed:data.userName,backUrl:1,name:fullName}]);
+      }
+    })
+    let token = await this.firebaseMessaging.getToken();
+    let sendValues = {'mainUser':this.mainUserName,'userName':this.userName,'dep':this.department,'token':token};
+     this.userService.loginDataUser(sendValues).then(async data=>{
+    }).catch(error=>{
+      this.checkLoginDataUser();
     });
-    if(valcheckV==1){
-      return false;
+  }
+  async functionChatGetMobileInfo(number:any): Promise<any[]> {
+      let key = this.mainUserName + this.userName + this.password + "(OLH)" + this.genaratedDate;
+      const md5Hash = CryptoJS.algo.MD5.create();
+      md5Hash.update(key);
+      this.apiKey = md5Hash.finalize().toString();
+      let sendValues = {
+        mainUserName: this.mainUserName,
+        userName: this.userName,
+        password: this.password,
+        apiKey: this.apiKey
+      };
+     
+    try {
+      const data: any = await this.userService.chatGetMobileInfo(sendValues);
+      if (data.messageId == 1) {
+        const matchedContact = data.info.find((item:any) =>
+          item.number == number
+        );
+        return matchedContact ? matchedContact.name : number;
+      }
+      return number;
+    } catch (error) {
+      return number;
     }
-    //(this.mainUserName == undefined || this.mainUserName == "") && 
-    if((this.userName == undefined || this.userName == "") && (this.password == undefined || this.password == "")){
-      //this.errorMainUserName = "ionItemStyleError";
-      //this.isErrorMainUserName = 0;
-      this.errorUserName = "ionItemStyleError";
-      this.isErrorUserName = 0;
-      this.errorUserPassword = "ionItemStyleError";
-      this.isErrorUserPassword = 0;
-      this.isdisabled = false;
-      return false;
-    }
-    // if(this.errorMainUserName == undefined || this.errorMainUserName == ""){
-    //   this.errorMainUserName = "ionItemStyleError";
-    //   this.isErrorMainUserName = 0;
-    //   this.isdisabled = false;
-    //   return false;
-    // }
-    if(this.userName == undefined || this.userName == ""){
-      this.errorUserName = "ionItemStyleError";
-      this.isErrorUserName = 0;
-      this.isdisabled = false;
-      return false;
-    }
-    if(this.password == undefined || this.password == ""){
-      this.errorUserPassword = "ionItemStyleError";
-      this.isErrorUserPassword = 0;
-      this.isdisabled = false;
-      return false;
-
-    }
-    if (this.userName.includes("@")) {
-      [this.userNameVal, this.mainUserName] = this.userName.split("@");
-    }else{
-      this.isErrorUserNameTow = 0;
-      this.userNameVal = ""; 
-      this.mainUserName = "";
-      this.isdisabled = false;
-      return false;
-    }
-    let key = this.mainUserName+this.userNameVal+this.password+"(OLH)"+this.genaratedDate;
+  }
+  functionRemoveSearch(){
+    this.searchData = "";
+    this.showCloseSearch = 0;
+    this.searchType = 0;
+    this.searchChatVal = 2;
+  }
+  toggleSearch() {
+    this.showSearch = !this.showSearch;
+    this.showSearchs = !this.showSearchs;
+    this.searchType = 0;
+    this.searchData = "";
+    this.showCloseSearch = 0;
+    this.searchChatVal = 2;
+  }
+  async functionReturnData(){
+    let key = this.mainUserName+this.userName+this.password+"(OLH)"+this.genaratedDate;
     const md5Hash = CryptoJS.algo.MD5.create();
     md5Hash.update(key);
     this.apiKey = md5Hash.finalize();
     this.apiKey=this.apiKey.toString();
-    let sendValues = {'mainUserName':this.mainUserName,'userName':this.userNameVal,'password':this.password,'apiKey':this.apiKey};
-    const loading = await this.loading.create({
-      cssClass: 'custom-spinner',
-      message: '',
-      duration: 1500,
-    });
-    this.userService.login(sendValues).then(async data=>{
+    let currentDate = new Date();
+    this.year = currentDate.getFullYear();
+    this.month = currentDate.getMonth() + 1; // Months are zero-based (0 = January)
+    this.day = currentDate.getDate();
+    this.hour = currentDate.getHours();
+    this.minutes  = currentDate.getMinutes();
+    this.seconds = currentDate.getSeconds();
+    if(this.month<10)
+      this.month = '0'+ this.month;
+    if(this.day<10) 
+      this.day = '0'+ this.day;
+    if(this.hour<10) 
+      this.hour = '0'+ this.hour;
+    if(this.minutes<10) 
+      this.minutes = '0'+ this.minutes;
+    if(this.seconds<10) 
+      this.seconds = '0'+ this.seconds;
+    this.genaratedFullDate = this.year+""+this.month+""+this.day+this.hour+this.minutes+this.seconds;
+    let sendValues = {'mainUserName':this.mainUserName,'userName':this.userName,'password':this.password,'apiKey':this.apiKey,'onliceData':2,'dateSelect':this.genaratedFullDate,'sessionLogin':this.sessionLogin};
+    this.chatService.chatGetData(sendValues).then(async data=>{
+      this.returnChatArrayAll.clear();
+      this.returnResultDataQueSizeAll = 0;
       this.returnResultData = data;
       let errorData = this.returnResultData.messageId;
       if(errorData == 1){
-        await this.storage.set('mainUserName',this.mainUserName);
-        await this.storage.set('userName',this.userNameVal);
-        await this.storage.set('password',this.password);
-        await this.storage.set('apiKey',this.apiKey);
-        await this.storage.set('sessionLogin',this.returnResultData.sessionLogin);
-        await this.storage.set('department',this.returnResultData.department);
-        await this.storage.set('supervisor',this.returnResultData.supervisor);
-        await this.storage.set('name',this.returnResultData.name);
-        this.displayResult(this.login_error_one);
-        this.navCtrl.navigateRoot("/home");
-        await loading.present();
+        this.returnChatArray=[];
+        if(typeof this.returnResultData.data.process!== 'undefined'){
+          let counter = 0;
+          let countOfData = 0;
+          this.returnArrayChatFromServer = this.returnResultData.data.process;
+          Object.keys(this.returnArrayChatFromServer).forEach(key => {
+            //let userName = this.returnArrayChatFromServer[key].userName.toLowerCase();
+            //let userNamekey = this.userName.toLowerCase();
+            this.returnChatArray[counter]=[];
+              this.returnChatArray[counter]['mobile'] = this.returnArrayChatFromServer[key].mobile;
+              this.returnChatArray[counter]['userName'] = this.returnArrayChatFromServer[key].userName;
+              this.returnChatArray[counter]['chatSessionId'] = this.returnArrayChatFromServer[key].chatSessionId;
+              this.returnChatArray[counter]['badge'] = this.returnArrayChatFromServer[key].badge;
+              this.returnChatArray[counter]['name'] = this.returnArrayChatFromServer[key].name;
+              if(this.returnChatArray[counter]['name']=="" || this.returnChatArray[counter]['name']==undefined)
+                  this.returnChatArray[counter]['name'] = this.returnArrayChatFromServer[key].mobile;
+              if(this.returnChatArray[counter]['badge']!=0){
+                  this.returnChatArray[counter]['countMsg'] = this.msg_count;
+              }else{
+                this.returnChatArray[counter]['countMsg']=0;
+              }
+               this.returnChatArrayAll.add(this.returnArrayChatFromServer[key].mobile); 
+              counter++;
+          });
+          this.returnResultDataQueSizeAll = this.returnChatArrayAll.size
+          countOfData = this.returnChatArray.length;
+          if(countOfData == 0)
+            this.chatVal = 0;
+          else{
+            this.chatVal = 1;
+          }  
+        }else
+        this.chatVal = 0;
       }else if(errorData == 2){
-        this.displayResult(this.login_error_tow);
-        await loading.present();
+        this.chatVal = 0;
       }else {
-        this.displayResult(this.login_error_three);
-        await loading.present();
+        this.chatVal = 0;
       }
-    }).catch(async error=>{
-      this.displayResult(this.login_error_three);
-      await loading.present();
+      this.timeCheck = setTimeout(() => {
+        this.functionReturnData();
+      }, 3000);
+    }).catch(error=>{
+      this.functionReturnData();
     });
-    this.isdisabled = true;
-    return true;
+  }
+  async functionReturnDataQue(){
+    let key = this.mainUserName+this.userName+this.password+"(OLH)"+this.genaratedDate;
+    const md5Hash = CryptoJS.algo.MD5.create();
+    md5Hash.update(key);
+    this.apiKey = md5Hash.finalize();
+    this.apiKey=this.apiKey.toString();
+    let currentDate = new Date();
+    this.year = currentDate.getFullYear();
+    this.month = currentDate.getMonth() + 1; // Months are zero-based (0 = January)
+    this.day = currentDate.getDate();
+    this.hour = currentDate.getHours();
+    this.minutes  = currentDate.getMinutes();
+    this.seconds = currentDate.getSeconds();
+    if(this.month<10)
+      this.month = '0'+ this.month;
+    if(this.day<10) 
+      this.day = '0'+ this.day;
+    if(this.hour<10) 
+      this.hour = '0'+ this.hour;
+    if(this.minutes<10) 
+      this.minutes = '0'+ this.minutes;  
+    if(this.seconds<10) 
+      this.seconds = '0'+ this.seconds;
+    this.genaratedFullDate = this.year+""+this.month+""+this.day+this.hour+this.minutes+this.seconds;
+    let sendValues = {'mainUserName':this.mainUserName,'userName':this.userName,'password':this.password,'apiKey':this.apiKey,'onliceData':2,'dateSelect':this.genaratedFullDate,'sessionLogin':this.sessionLogin};
+    this.chatService.chatGetData(sendValues).then(async data=>{
+      this.returnResultDataQue = data;
+      let errorData = this.returnResultDataQue.messageId;
+      this.returnChatArrayQue.clear();
+      this.returnResultDataQueSize = 0;
+        if(errorData == 1){
+          if(typeof this.returnResultDataQue.data.queue!== 'undefined'){
+            this.returnArrayChatFromServerQue = this.returnResultDataQue.data.queue;
+            Object.keys(this.returnArrayChatFromServerQue).forEach(key => {
+                this.returnChatArrayQue.add(this.returnArrayChatFromServerQue[key].mobile); 
+            });
+        }
+      }
+      this.returnResultDataQueSize = this.returnChatArrayQue.size;
+      this.timeCheck = setTimeout(() => {
+        this.functionReturnDataQue();
+      }, 3000);
+    }).catch(error=>{
+      this.functionReturnDataQue();
+    });
+  }
+  functionSearch(event:any){
+    this.searchData = event.target.value;
+    if(this.searchData == "" || this.searchData == undefined){
+      this.showCloseSearch = 0;
+      this.searchType = 0;
+      this.searchChatVal = 2;      
+    }else{
+      this.searchType = 1; 
+      this.showCloseSearch = 1;
+      this.searchChatVal = 0;
+        let data = this.returnChatArray.filter((item: any) => { const term = this.searchData?.toString().toLowerCase() || ''; return item.mobile?.toString().toLowerCase().includes(term) || item.name?.toString().toLowerCase().includes(term); });
+        if(typeof data!== 'undefined'){
+          this.returnChatSearchArray = [];
+          if(data.length>0){
+            this.searchChatVal = 1;
+            for(let i = 0; i < data.length;i++) {
+             this.returnChatSearchArray[i]=[];
+              this.returnChatSearchArray[i]['mobile'] = data[i].mobile;
+              this.returnChatSearchArray[i]['userName'] = data[i].userName;
+              this.returnChatSearchArray[i]['chatSessionId'] = data[i].chatSessionId;
+              this.returnChatSearchArray[i]['badge'] = data[i].badge;
+              this.returnChatSearchArray[i]['name'] = data[i].name;
+              if(this.returnChatSearchArray[i]['name']=="" || this.returnChatSearchArray[i]['name']==undefined)
+                  this.returnChatSearchArray[i]['name'] = data[i].mobile;
+              if(this.returnChatSearchArray[i]['badge']!=0){
+                  this.returnChatSearchArray[i]['countMsg'] = this.msg_count;
+              }else{
+                this.returnChatSearchArray[i]['countMsg']=0;
+              }
+            }
+          }else{
+            this.searchChatVal = 0;
+          }
+        }else{
+          this.searchType = 0;   
+        }
+    }
+  }
+  async functionCreatTable(){
+    await this.databaseService.createTables('numbers', '`id` INTEGER PRIMARY KEY AUTOINCREMENT, `number` VARCHAR(255) UNIQUE')
+      .then((data:any) => {
+       }) 
+    .catch(error =>alert("Error In Data Base"));
+
+    await this.databaseService.createTables('msg_temp', '`id` INTEGER PRIMARY KEY AUTOINCREMENT,`msgId` INTEGER UNIQUE, `numberSend` VARCHAR(255),`msg` TEXT,`time` VARCHAR(255),`date` VARCHAR(255),`dateId` VARCHAR(255),`from` INTEGER,`filePath` VARCHAR(255),`msg_status` VARCHAR(255),`session_id` VARCHAR(255),`private_note` INTEGER')
+    .then((data:any) => {
+     }) 
+     .catch(error =>alert("Error In Data Base"));
+    await this.databaseService.createTables('msg', '`id` INTEGER PRIMARY KEY AUTOINCREMENT,`msgId` INTEGER UNIQUE, `numberSend` VARCHAR(255),`msg` TEXT,`time` VARCHAR(255),`date` VARCHAR(255),`dateId` VARCHAR(255),`from` INTEGER,`filePath` VARCHAR(255),`msg_status` VARCHAR(255),`session_id` VARCHAR(255),`private_note` INTEGER')
+      .then((data:any) => {
+       }) 
+       .catch(error =>alert("Error In Data Base"));
+  }
+  //pages
+  functionSetting(){
+    this.navCtrl.navigateRoot('settings');
+  }
+  functionContact(){
+    this.navCtrl.navigateRoot('contacts');
+  }
+  functionChatbot(){
+    this.navCtrl.navigateForward('chatbot');
+  }
+  functionArchive(){
+    this.navCtrl.navigateRoot('archivenumber');
+  }
+  functionQueued(){
+    this.navCtrl.navigateRoot('queued');
+  }
+  functionUnassigned(){
+    this.navCtrl.navigateRoot('unassigned');
+  }
+  functionChats(number:any,chatSessionId:any,userName:any,name:any){
+    let fullName = name+' & '+userName;
+    this.navCtrl.navigateRoot(['/chats', {number:number,chatSessionId:chatSessionId,userNameUsed:userName,backUrl:1,name:fullName}]);
+  }
+  async checkLoginUser(){
+    this.mainUserName = await this.storage.get('mainUserName');
+    this.userName = await this.storage.get('userName');
+    this.password = await this.storage.get('password');
+    this.apiKey = await this.storage.get('apiKey');
+    this.sessionLogin = await this.storage.get('sessionLogin');
+    this.department = await this.storage.get('department');
+    this.supervisor = await this.storage.get('supervisor');
+    this.name = await this.storage.get('name');
+    if(this.mainUserName == null || this.userName == null || this.password == null || this.apiKey == null || this.sessionLogin == null || this.department == null || this.supervisor == null || this.name == null){
+      this.storage.remove('mainUserName');
+      this.storage.remove('userName');
+      this.storage.remove('password');
+      this.storage.remove('apiKey');
+      this.storage.remove('sessionLogin');
+      this.storage.remove('department');
+      this.storage.remove('supervisor');
+      this.storage.remove('name');
+      this.navCtrl.navigateRoot('login');
+    }
   }
   async getDeviceLanguage() {
     await this.storage.get('checkLanguage').then(async checkLanguage=>{
@@ -357,7 +467,7 @@ public version: any;
       if (window.Intl && typeof window.Intl === 'object') {
         let Val  = navigator.language.split("-");
         this.translate.setDefaultLang(Val[0]);
-        if (Val[0] == "ar" || Val[0] == "en" || Val[0] == "ur")
+        if (Val[0] == "ar" ||  Val[0] == "en")
           this.language = Val[0];
         else
           this.language = 'en';
@@ -368,7 +478,7 @@ public version: any;
         this.globalization.getPreferredLanguage().then(res => {
           let Val  = res.value.split("-");
           this.translate.setDefaultLang(Val[0]);
-          if (Val[0] == "ar" || Val[0] == "en" || Val[0] == "ur")
+          if (Val[0] == "ar" || Val[0] == "en")
             this.language = Val[0];
           else
             this.language = 'en';
@@ -381,13 +491,11 @@ public version: any;
   async displayResult(message:any){
     let toast = await this.toastCtrl.create({
       message: message,
-      duration: 4000,
+      duration: 4500,
       position: 'bottom',
       cssClass:"toastStyle",
+      color:""
     });
     await toast.present();
-  }
-  changeInputType(){
-    this.showPassword = !this.showPassword;
   }
 }
